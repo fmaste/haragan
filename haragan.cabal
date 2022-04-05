@@ -1,0 +1,181 @@
+cabal-version: 3.0
+name:          haragan
+version:       0.0.1
+copyright:     (c) 2014-2018 Federico Mastellone
+license:       LicenseRef-AllRightsReserved
+author:        Federico Mastellone
+maintainer:    fmaste@gmail.com
+build-type:    Custom
+tested-with:   GHC==8.10.4
+
+-- Dependencies:
+-- sudo apt-get --no-install-recommends install libpq-dev
+-- The following NEW packages will be installed:
+--  libpq-dev libpq5
+
+data-dir: data
+data-files:
+    web/css/bootstrap/3.3.5/bootstrap.css
+    web/css/bootstrap/3.3.5/bootstrap.min.css
+    web/css/bootstrap/3.3.5/bootstrap-theme.css
+    web/css/bootstrap/3.3.5/bootstrap-theme.min.css
+    web/css/bootstrap/3.3.6/bootstrap.css
+    web/css/bootstrap/3.3.6/bootstrap.min.css
+    web/css/bootstrap/3.3.6/bootstrap-theme.css
+    web/css/bootstrap/3.3.6/bootstrap-theme.min.css
+    web/css/bootstrap/4.0.0-alpha.2/bootstrap.css
+    web/css/bootstrap/4.0.0-alpha.2/bootstrap.css.map
+    web/css/bootstrap/4.0.0-alpha.2/bootstrap.min.css
+    web/css/bootstrap/4.0.0-alpha.2/bootstrap.min.css.map
+    web/css/jquery-ui/1.11.2/jquery-ui.css
+    web/css/jquery-ui/1.11.2/jquery-ui.min.css
+    web/css/jquery-ui/1.11.2/jquery-ui.structure.css
+    web/css/jquery-ui/1.11.2/jquery-ui.structure.min.css
+    web/css/jquery-ui/1.11.2/jquery-ui.theme.css
+    web/css/jquery-ui/1.11.2/jquery-ui.theme.min.css
+    web/fonts/bootstrap/3.3.5/glyphicons-halflings-regular.eot
+    web/fonts/bootstrap/3.3.5/glyphicons-halflings-regular.svg
+    web/fonts/bootstrap/3.3.5/glyphicons-halflings-regular.ttf
+    web/fonts/bootstrap/3.3.5/glyphicons-halflings-regular.woff
+    web/fonts/bootstrap/3.3.5/glyphicons-halflings-regular.woff2
+    web/fonts/bootstrap/3.3.6/glyphicons-halflings-regular.eot
+    web/fonts/bootstrap/3.3.6/glyphicons-halflings-regular.svg
+    web/fonts/bootstrap/3.3.6/glyphicons-halflings-regular.ttf
+    web/fonts/bootstrap/3.3.6/glyphicons-halflings-regular.woff
+    web/fonts/bootstrap/3.3.6/glyphicons-halflings-regular.woff2
+    web/html/index.html
+    web/html/login.html
+    web/images/jquery-ui/1.11.2/*.png
+    web/images/jsMVC/spinner.gif
+    web/js/bootstrap/3.3.5/bootstrap.js
+    web/js/bootstrap/3.3.5/bootstrap.min.js
+    web/js/bootstrap/3.3.6/bootstrap.js
+    web/js/bootstrap/3.3.6/bootstrap.min.js
+    web/js/bootstrap/4.0.0-alpha.2/bootstrap.js
+    web/js/bootstrap/4.0.0-alpha.2/bootstrap.min.js
+    web/js/cldrjs/0.4.4/cldr.js
+    web/js/cldrjs/0.4.4/event.js
+    web/js/cldrjs/0.4.4/supplemental.js
+    web/js/cldrjs/0.4.4/unresolved.js
+    web/js/globalize/1.1.1/currency.js
+    web/js/globalize/1.1.1/date.js
+    web/js/globalize/1.1.1/globalize.js
+    web/js/globalize/1.1.1/message.js
+    web/js/globalize/1.1.1/number.js
+    web/js/globalize/1.1.1/plural.js
+    web/js/globalize/1.1.1/relative-time.js
+    web/js/globalize/1.1.1/unit.js
+    web/js/jquery/2.1.1/jquery.js
+    web/js/jquery/2.1.1/jquery.min.js
+    web/js/jquery/2.2.0/jquery.js
+    web/js/jquery/2.2.0/jquery.min.js
+    web/js/jquery-ui/1.11.2/jquery-ui.js
+    web/js/jquery-ui/1.11.2/jquery-ui.min.js
+    web/js/jInvoice.js
+    web/js/jsMVC.js
+    web/js/jSwipeCard.js
+    web/js/jTable.js
+    web/js/quirks.js
+
+flag UsePathsCache
+    description: Use a cache with the content of the data-files
+    default: True
+    manual: True
+
+custom-setup
+    setup-depends:
+        base >= 4.7 && < 5,
+        bytestring >= 0.10.8,
+        filepath >= 1.4.0.0,
+        directory >= 1.2.6.2,
+        Cabal >= 3.2.0.0
+
+Library
+    hs-source-dirs: src common
+    default-language: Haskell2010
+    build-depends:
+        base >= 4.7 && < 5,
+        -- base-compat of aeson needs time < 1.8
+        -- splitbase of HDBC needs time < 1.7
+        time >= 1.9,
+        bytestring >= 0.10.8,
+        text >= 1.2.3.0,
+        containers >= 0.5.7,
+        unordered-containers >= 0.2,
+        vector >= 0.12,
+        binary >= 0.8.3,
+        aeson >= 1.4.1.0,
+        network >= 2.8.0.0,
+        random >= 1,
+        postgresql-simple >= 0.6
+    exposed-modules:
+        Database
+        Database.Business
+        Network.App.CRM
+        Network.App.Post
+        Network.App.Table
+        Network.HTTP.Request
+        Network.HTTP.Response
+        Network.HTTP.Server
+        Network.HTTP.Types.Method
+        Network.HTTP.Types.Status
+        Network.HTTP.Types.Version
+    exposed: True
+    other-modules:
+        Database.Business.Method
+        Database.Internal
+        Database.Internal.Catalog
+        Database.Internal.Meta
+        Database.Schema.Subscriptions
+        Network.HTTP.Cookie
+        Network.HTTP.Request.Parser.Binary
+        Network.HTTP.Response.Renderer.Binary
+        Network.HTTP.Session
+        Network.TCP.Server
+        Network.TCP.Server.Internal
+    if flag(UsePathsCache)
+        other-modules: PathsCache_haragan
+    else
+        other-modules: PathsCache_haragan
+    if flag(UsePathsCache)
+        autogen-modules: PathsCache_haragan
+    else
+        autogen-modules: PathsCache_haragan
+    ghc-options: -Wall
+    ghc-prof-options:
+    ghc-shared-options:
+    if flag(UsePathsCache)
+        cpp-options: -D UsePathsCache
+    else
+        cpp-options:
+
+Executable Echo
+    main-is: Echo.hs
+    hs-source-dirs: main
+    default-language: Haskell2010
+    build-depends:
+        base >= 4.7 && < 5,
+        haragan
+    ghc-options: -Wall -threaded
+    ghc-prof-options:
+    ghc-shared-options:
+
+Test-Suite TestSuite
+    type: exitcode-stdio-1.0
+    main-is: TestSuite.hs
+    hs-source-dirs: src common testsuite/tests
+    default-language: Haskell2010
+    build-depends:
+        base >= 4.7 && < 5,
+        -- base-compat of aeson needs time < 1.8
+        -- splitbase of HDBC needs time < 1.7
+        time >= 1.9,
+        bytestring >= 0.10.8,
+        containers >= 0.5.7,
+        binary >= 0.8.3,
+        network >= 2.8.0.0,
+        random >= 1,
+        HUnit >= 1.2.4.2 && < 2,
+        test-framework >= 0.8,
+        test-framework-hunit >= 0.3
+    ghc-options: -Wall -threaded

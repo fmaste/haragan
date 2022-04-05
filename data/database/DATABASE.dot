@@ -1,0 +1,307 @@
+// We use the classic Chen notattion, or Look-Across as named by this paper:
+// Transforming N-ary Relationships to Database Schemas: An Old and Forgotten
+// Problem
+// (https://core.ac.uk/download/pdf/81570774.pdf)
+
+// Node Shapes
+// https://www.graphviz.org/doc/info/shapes.html#polygon
+// Record-based Nodes
+// https://www.graphviz.org/doc/info/shapes.html#record
+
+// Colors:
+// https://graphviz.gitlab.io/_pages/doc/info/colors.html
+
+strict graph {
+
+        splines=true;
+        margin=10;
+
+        subgraph cluster_public {
+
+                label="PUBLIC";
+                margin=10;
+
+                shard_id [
+                          shape=ellipse
+                        , label="shard_id()"
+                ];
+
+                global_id_generator [
+                          shape=ellipse
+                        , label="global_id_generator()"
+                ];
+
+        }
+
+        subgraph cluster_catalog {
+
+                label="CATALOG";
+                margin=10;
+
+                {rank=min; methods;}
+                {rank=same; data_methods; business_methods;}
+                {rank=same; data_modules_methods; data_modules_versions;}
+                //{rank=same; data_modules_data_modules_versions; data_modules_data_modules_methods;}
+                //{rank=same; business_versions; business_methods;}
+                {rank=max; data_version_id; data_updates;}
+
+                methods [
+                          color=blue
+                        , shape=record
+                        , label="{<f0>methods}"
+                ];
+
+                // Modules.
+
+                data_modules [
+                          color=red
+                        , shape=record
+                        , label="{data_modules|*name}"
+                ];
+
+                // Module's methods.
+
+                data_modules_methods [
+                          color=red
+                        , shape=record
+                        , label="{<f0>data_modules_methods|<f1>*name\ntable_name\nverb\n}"
+                ];
+
+                // Proxy node
+                data_modules_data_modules_methods [
+                          color=red
+                        , shape=diamond
+                        , label=""
+                ];
+
+                // Module's versions.
+
+                data_modules_versions [
+                          color=red
+                        , shape=record
+                        , label="{<f0>data_modules_versions|<f1>*INTEGER[]\n*name}"
+                ];
+
+                // Proxy node
+                data_modules_data_modules_versions [
+                          color=red
+                        , shape=diamond
+                        , label=""
+                ];
+
+                // ----------
+
+                data_methods [
+                          color=red
+                        , shape=record
+                        , label="data_methods"
+                ];
+
+                data_methods_ternary [
+                          color=red
+                        , shape=diamond
+                        , label=""
+                ];
+
+                data_version_id [
+                          color=red
+                        , shape=ellipse
+                        , label="data_version_id()"
+                ];
+
+                data_updates [
+                          color=red
+                        , shape=record
+                        , label="{<f0>data_updates|<f1>SQL_DDL[]}"
+                ];
+
+                business_versions [
+                          color=green
+                        , shape=record
+                        , label="{<f0>business_versions|<f1>*module\n*INTEGER[]\n*name}"
+                ];
+
+                business_methods [
+                          color=green
+                        , shape=record
+                        , label="{<f0>business_methods|<f1>*name}"
+                ];
+
+                // data_modules -- data_modules_versions
+                // With proxy node.
+                data_modules_data_modules_versions -- data_modules
+                        [color=red, label="  ",taillabel="",headlabel="1"];
+                data_modules_data_modules_versions -- data_modules_versions
+                        [color=red, label="  ",taillabel="",headlabel="1..N"];
+
+                // data_modules -- data_modules_methods
+                // With proxy node.
+                data_modules_data_modules_methods -- data_modules
+                        [color=red, label="  ",taillabel="",headlabel="1"];
+                data_modules_data_modules_methods -- data_modules_methods
+                        [color=red, label="  ",taillabel="",headlabel="0..N"];
+
+                // data_methods -- data_modules_methods -- data_modules_versions
+                // With a proxy node.
+                data_methods_ternary -- data_methods
+                        [color=red, label="  ",taillabel="",headlabel="0..N"];
+                data_methods_ternary -- data_modules_methods
+                        [color=red, label="  ",taillabel="",headlabel="1"];
+                data_methods_ternary -- data_modules_versions
+                        [color=red, label="  ",taillabel="",headlabel="1"];
+                // Dependency of proxy node.
+                data_methods_ternary -- data_modules_data_modules_versions
+                        [color=red, style=dashed];
+                // Dependency of proxy node.
+                data_methods_ternary -- data_modules_data_modules_methods
+                        [color=red, style=dashed];
+
+                data_version_id -- data_modules_versions
+                        [color=red];
+
+                data_modules_versions -- data_updates
+                        [color=red, label="  ",taillabel="1..N",headlabel="0..1"];
+
+                business_versions -- methods
+                        [color=green, label="  ",taillabel="1",headlabel="0..N"];
+
+                business_methods -- methods
+                        [color=green, label="  ",taillabel="1",headlabel="0..N"];
+
+                methods -- data_methods
+                        [color=blue, label="  ",taillabel="0..N",headlabel="1"];
+
+/* TODO: dependencies!
+                business_methods_versions -- business_methods_versions
+                        [color=chocolate, label="  ",taillabel="1",headlabel="0..N"];
+*/
+
+        }
+
+        subgraph cluster_meta {
+
+                label="META";
+                margin=10;
+
+                {rank=min; methods_calls_ternary;}
+                {rank=same; business_methods_calls; data_methods_calls;}
+
+                // Cardinality:
+                // (SCHEMA.methods, business_methods_calls, data_methods_calls)
+                // (1,1,N)
+                // Funcional dependencies:
+                // (SCHEMA.methods, data_methods_calls) => business_methods_calls
+                // (business_methods_calls, data_methods_calls) => SCHEMA.methods
+
+                // Constraint:
+                // (data_methods_calls) => business_methods_calls
+                // New Funcional dependencies:
+                // (data_methods_calls) => (SCHEMA.methods, business_methods_calls)
+                // So data_methods_calls is UNIQUE
+
+                methods_calls_ternary [
+                          color=blue
+                        , shape=diamond
+                        , label="methods_calls_versions"
+                ];
+
+                business_methods_calls [
+                          color=green
+                        , shape=record
+                        , label="{business_methods_calls|*DSGID(shard_id())}"
+                ];
+
+                data_methods_calls [
+                          color=red
+                        , shape=record
+                        , label="{data_methods_calls|*DSGID(shard_id())}"
+                ];
+
+                methods_calls_ternary -- business_methods_calls [
+                          color=blue
+                        , label=""
+                        , taillabel="1..N "
+                        , headlabel="1  "
+                ];
+
+                methods_calls_ternary -- data_methods_calls [
+                          color=blue
+                        , label=""
+                        , taillabel="1     "
+                        , headlabel="1..N"
+                ];
+
+        }
+
+        // META - SCHEMA
+
+        methods_calls_ternary -- methods
+                [color=blue, label="  ",taillabel=" 0..N",headlabel="1"];
+
+        subgraph cluster_sync {
+
+                label="SYNC";
+                margin=10;
+
+                {rank=min; shards;}
+                //{rank=same; publications; replications;}
+
+                shards [
+                          shape=record
+                        , label="{<f0>shards}"
+                ];
+
+                business_methods_calls_origins [
+                          color=green
+                        , shape=record
+                        , label="{<f0>business_methods_calls_origins|<f1>*name}"
+                ];
+
+                subscriptions [
+                          color=magenta
+                        , shape=record
+                        , label="{<f0>subscriptions|<f1>*name}"
+                ];
+
+                publications [
+                          shape=record
+                        , label="{<f0>publications|<f1>*name}"
+                ];
+
+                replications [
+                          shape=record
+                        , label="{<f0>replications|<f1>*name}"
+                ];
+
+                business_methods_calls_origins -- shards
+                        [label="  ",taillabel="0..N",headlabel="1"];
+
+                subscriptions -- shards
+                        [label="  ",taillabel="0..N",headlabel="1..N"];
+
+                publications -- business_methods_calls_origins
+                        [label="  ",taillabel="0..1",headlabel="1"];
+
+                publications -- shards
+                        [label="  ",taillabel="1",headlabel="0..N"];
+
+                publications -- replications
+                        [label="  ",taillabel="1",headlabel="0..1"];
+
+        }
+
+        // PUBLIC - SYNC
+
+        shard_id -- shards;
+
+        // SCHEMA - SYNC
+
+        subscriptions -- business_methods
+                [label="  ",taillabel="1",headlabel="1..N"];
+
+        // META - SYNC
+
+        business_methods_calls_origins -- business_methods_calls
+                [label="  ",taillabel="0..1",headlabel="1"];
+
+}

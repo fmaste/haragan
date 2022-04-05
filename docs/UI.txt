@@ -1,0 +1,13 @@
+Buttons trigger on mouse click xor Enter key:
+Must be trigger on mouse click xor pressing Enter on the keyboard, not both.
+When clicking on a button it gets focus and subsequent Enters trigger the
+button. This keypresses could be accidental or not, for example when pressing
+enter multiple times to accept a popup/alert window because lots of people
+still press Enter many times as a way to ensure the system gets the input.
+
+Simple and double click must be the same:
+Never differentiate simple and double click, both must trigger the same action.
+Still too many people confuses HTML and the very well known Microsoft Windows 
+desktop icons, the first just needs a simple click but on the seconds it is
+used to select an item without doing any action.
+
